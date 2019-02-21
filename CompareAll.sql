@@ -44,6 +44,55 @@ GO
 
 
 
+SELECT 'Tables RowCount Differences';
+
+--DROP TABLE DBA_Sys_Configurations
+
+--Create a blank table to hold the data to compare/report
+SELECT @@servername as ServerName, *
+INTO DBA_Sys_Configurations
+from sys.configurations
+WHERE 0=1
+ 
+--Get 1st instance sys.configurations data
+INSERT INTO DBA_Sys_Configurations
+SELECT '1stInstanceName' as ServerName, *
+from 1stInstanceName.MASTER.sys.configurations
+ 
+--Get 2nd instance sys.configurations data
+INSERT INTO DBA_Sys_Configurations
+SELECT '2ndInstanceName' as ServerName, *
+from 2ndInstanceName.MASTER.sys.configurations
+ 
+--Make sure we have data from both instances
+SELECT * FROM DBA_Sys_Configurations
+--Has both instance values
+ 
+SELECT inst1.configuration_id,
+    inst1.name,
+    inst1.value AS Inst1Value,
+    inst2.value AS Inst2Value
+FROM
+(
+    SELECT *
+    FROM DBA_Sys_Configurations
+    WHERE ServerName = '1stInstanceName'
+) inst1
+INNER JOIN
+(
+    SELECT *
+    FROM DBA_Sys_Configurations
+    WHERE ServerName = '2ndInstanceName'
+) inst2
+ON inst1.configuration_id = inst2.configuration_id
+    AND (inst1.value != inst2.value
+         OR inst1.value_in_use != inst2.value_in_use)
+
+---------------------------------------------------------------------------
+
+
+
+
 SELECT 'Tables/Views Differences';
 
 --DROP TABLE DBA_TablesViews;
